@@ -54,11 +54,12 @@ class FuncMetadata(BaseModel):
         Arguments are first attempted to be parsed from JSON, then validated against
         the argument model, before being passed to the function.
         """
-        arguments_pre_parsed = self.pre_parse_json(arguments_to_validate)
-        arguments_parsed_model = self.arg_model.model_validate(arguments_pre_parsed)
-        arguments_parsed_dict = arguments_parsed_model.model_dump_one_level()
+        # TODO breaks when called through ray serve deployment ingress
+        # arguments_pre_parsed = self.pre_parse_json(arguments_to_validate)
+        # arguments_parsed_model = self.arg_model.model_validate(arguments_pre_parsed)
+        # arguments_parsed_dict = arguments_parsed_model.model_dump_one_level()
 
-        arguments_parsed_dict |= arguments_to_pass_directly or {}
+        arguments_parsed_dict = arguments_to_pass_directly or {}
 
         if fn_is_async:
             if isinstance(fn, Awaitable):

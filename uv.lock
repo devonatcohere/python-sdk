@@ -1,5 +1,4 @@
 version = 1
-revision = 1
 requires-python = ">=3.10"
 
 [options]
@@ -487,6 +486,7 @@ wheels = [
 
 [[package]]
 name = "mcp"
+version = "1.6.0"
 source = { editable = "." }
 dependencies = [
     { name = "anyio" },
@@ -543,7 +543,6 @@ requires-dist = [
     { name = "uvicorn", marker = "sys_platform != 'emscripten'", specifier = ">=0.23.1" },
     { name = "websockets", marker = "extra == 'ws'", specifier = ">=15.0.1" },
 ]
-provides-extras = ["cli", "rich", "ws"]
 
 [package.metadata.requires-dev]
 dev = [

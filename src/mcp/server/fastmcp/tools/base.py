@@ -1,9 +1,10 @@
 from __future__ import annotations as _annotations
 
 import inspect
+import logging
+import traceback
 from collections.abc import Callable
 from typing import TYPE_CHECKING, Any, get_origin
-
 from pydantic import BaseModel, Field
 
 from mcp.server.fastmcp.exceptions import ToolError
@@ -14,10 +15,10 @@ if TYPE_CHECKING:
     from mcp.server.session import ServerSessionT
     from mcp.shared.context import LifespanContextT
 
+logger: logging.Logger = logging.getLogger(__name__)
 
 class Tool(BaseModel):
     """Internal tool registration info."""
-
     fn: Callable[..., Any] = Field(exclude=True)
     name: str = Field(description="Name of the tool")
     description: str = Field(description="Description of what the tool does")
@@ -81,14 +82,17 @@ class Tool(BaseModel):
         context: Context[ServerSessionT, LifespanContextT] | None = None,
     ) -> Any:
         """Run the tool with arguments."""
+        logger.info(f"Running tool {self.name} with args: {arguments=}, ctx: {type(context)}")
+        from mcp.server.fastmcp.server import Context
+        if isinstance(context, Context):
+            schema = self.fn_metadata.arg_model.model_json_schema()
+            await context.info(f"Running {self.name} with {arguments=} {schema=}")
         try:
             return await self.fn_metadata.call_fn_with_arg_validation(
-                self.fn,
-                self.is_async,
-                arguments,
-                {self.context_kwarg: context}
-                if self.context_kwarg is not None
-                else None,
+                fn=self.fn,
+                fn_is_async=self.is_async,
+                arguments_to_validate={},
+                arguments_to_pass_directly=arguments,
             )
         except Exception as e:
-            raise ToolError(f"Error executing tool {self.name}: {e}") from e
+            raise ToolError(f"Error executing tool {self.name}: {traceback.format_exception(e)}") from e
